@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int                @id @default(autoincrement())
+  username        String
+  email           String             @unique
+  phone           String             @unique
+  contacts        Contact[]          @relation("UserContacts")
+  slots           AvailabilitySlot[]
+  invitesSent     Invite[]           @relation("SentInvites")
+  invitesReceived Invite[]           @relation("ReceivedInvites")
+  created_at      DateTime           @default(now())
+  updated_at      DateTime           @updatedAt
+}
+
+enum Status {
+  invited
+  accepted
+  pending
+}
+
+model Contact {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation("UserContacts", fields: [userId], references: [id])
+  userId        Int
+  contact_name  String
+  contact_phone String
+  status        Status
+  invited_at    DateTime @default(now())
+}
+
+model AvailabilitySlot {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  start_time DateTime
+  end_time   DateTime
+  is_free    Boolean
+  label      String?
+
+  @@unique([userId, start_time, end_time])
+}
+
+model Invite {
+  id            Int       @id @default(autoincrement())
+  inviter       User      @relation("SentInvites", fields: [inviterId], references: [id])
+  invitee       User?     @relation("ReceivedInvites", fields: [inviteeId], references: [id])
+  inviterId     Int
+  inviteeId     Int?
+  invitee_phone String
+  send_at       DateTime  @default(now())
+  accepted_at   DateTime?
+
+  @@unique([inviterId, invitee_phone])
+}

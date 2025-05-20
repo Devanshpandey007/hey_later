@@ -1,0 +1,19 @@
+{
+  "name": "hey_later_project",
+  "version": "1.0.0",
+  "description": "Hey Later helps you sync contacts, send invites, and view others' availability to connect at the right time.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Devansh Pandey, Pradyumn kumar and Deeksha rastogi",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "express": "^5.1.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.2"
+  }
+}
