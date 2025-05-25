@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  FACEBOOK
+  APPLE
+}
+
+model User {
+  id          Int                @id @default(autoincrement())
+  first_name    String             @db.VarChar(50)
+  last_name    String            @db.VarChar(50)
+  email       String             @unique
+  gender      Gender?
+  phone       String             @unique @db.VarChar(15)
+  date_of_birth DateTime?
+  password    String?            @db.VarChar(255)
+  contacts    Contact[]          @relation("UserContacts")
+  slots       AvailabilitySlot[]
+  invitesSent Invite[]           @relation("SentInvites")
+  invitesReceived Invite[]       @relation("ReceivedInvites")
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+  authMethods UserAuth[]         
+}
+
+enum Status {
+  invited
+  accepted
+  pending
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Contact {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation("UserContacts", fields: [userId], references: [id])
+  userId        Int
+  contact_name  String
+  contact_phone String
+  status        Status
+  invited_at    DateTime  @default(now())
+}
+
+model AvailabilitySlot {
+  id         Int       @id @default(autoincrement())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     Int
+  start_time DateTime
+  end_time   DateTime
+  is_free    Boolean
+  label      String?
+
+  @@unique([userId, start_time, end_time])
+}
+
+model Invite {
+  id             Int       @id @default(autoincrement())
+  inviter        User      @relation("SentInvites", fields: [inviterId], references: [id])
+  invitee        User?     @relation("ReceivedInvites", fields: [inviteeId], references: [id])
+  inviterId      Int
+  inviteeId      Int?      
+  invitee_phone  String    
+  send_at        DateTime  @default(now())
+  accepted_at    DateTime?
+  
+  @@unique([inviterId, invitee_phone])
+}
+
+model UserAuth {
+  id           Int          @id @default(autoincrement())
+  user         User         @relation(fields: [userId], references: [id])
+  userId       Int
+  provider     AuthProvider
+  providerId   String      
+  accessToken  String?     
+  refreshToken String?     
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
